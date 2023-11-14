@@ -1,0 +1,41 @@
+﻿<div class="card text-center h-100">
+    @if (!string.IsNullOrWhiteSpace(DateTime))
+    {
+        <div class="card-header">
+            @DateTime
+        </div>
+    }
+    <div class="card-body">
+        <p class="mb-0">
+            <img src="@WeatherIconImgSrc" height="60" />
+            @WeatherDescription
+        </p>
+        <p class="display-6">
+            @Temperature °C
+        </p>
+        <p class="small">
+            Feels like @TemperatureFeelsLike °C
+        </p>
+        <p class="small">
+            Max @TemperatureMax °C Min @TemperatureMin °C
+        </p>
+        <p class="small">
+            @Humidity % humidity
+        </p>
+        <p class="small">
+            Wind @WindSpeed meter/sec
+        </p>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string DateTime { get; set; }
+    [Parameter] public string WeatherIconImgSrc { get; set; }
+    [Parameter] public string WeatherDescription { get; set; }
+    [Parameter] public double Temperature { get; set; }
+    [Parameter] public double TemperatureFeelsLike { get; set; }
+    [Parameter] public double TemperatureMax { get; set; }
+    [Parameter] public double TemperatureMin { get; set; }
+    [Parameter] public int Humidity { get; set; }
+    [Parameter] public double WindSpeed { get; set; }
+}

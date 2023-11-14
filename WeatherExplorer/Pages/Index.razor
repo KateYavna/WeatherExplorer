@@ -1,0 +1,27 @@
+﻿@page "/"
+@using WeatherData.Repositories.Interfaces;
+@using WeatherExplorer.Components
+@using WeatherServices.Dto;
+@using WeatherServices.Services.Interfaces;
+
+<PageTitle>WeatherExplorer App</PageTitle>
+
+@if (weather != null)
+{
+    <button @onclick="() => weather = null" class="btn btn-primary mb-4 me-2">Back to search</button>
+
+    <WeatherDisplay Weather="weather" />
+}
+else
+{
+    <LocationSearch OnSelectLocation="HandleSelectLocation" />
+}
+
+@code {
+    [Inject] IOpenWeatherService OpenWeatherService { get; set; }
+
+    WeatherDto weather;
+
+    private async Task HandleSelectLocation(LocationDto location) =>
+        weather = await OpenWeatherService.GetWeather(location);
+}

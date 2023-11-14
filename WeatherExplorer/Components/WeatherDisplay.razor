@@ -1,0 +1,118 @@
+﻿@using WeatherData.Entities;
+@using WeatherData.Repositories.Interfaces;
+@using WeatherServices.Dto;
+@using WeatherServices.Services.Interfaces;
+@using WeatherServices.Services;
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="d-inline me-2">Current conditions for @Weather.Location.name</h2>
+
+        <div class="row row-cols-1 row-cols-md-5 g-4">
+            <div class="col">
+                <WeatherCard WeatherDescription="@Weather.CurrentWeather.weather.First().main"
+                             Temperature="@Weather.CurrentWeather.main.temp"
+                             TemperatureFeelsLike="@Weather.CurrentWeather.main.feels_like"
+                             TemperatureMax="@Weather.CurrentWeather.main.temp_max"
+                             TemperatureMin="@Weather.CurrentWeather.main.temp_min"
+                             Humidity="@Weather.CurrentWeather.main.humidity"
+                             WindSpeed="@Weather.CurrentWeather.wind.speed" />
+            </div>
+        </div>
+    </div>
+
+    <br />
+    <div class="col-md-12" style="margin-top:20px">
+        <button @onclick="AddWeatherScreen" class="btn btn-primary">Add WeatherScreen to Database</button>
+        @if (successSavingMessage != null)
+        {
+            <div class="alert alert-success mt-3" role="alert">
+                @successSavingMessage
+            </div>
+        }
+        <button @onclick="RefreshWeatherData" class="btn btn-secondary">Refresh Weather Data</button>
+        @if (successRefreshingMessage != null)
+        {
+            <div class="alert alert-success mt-3" role="alert">
+                @successRefreshingMessage
+            </div>
+        }
+    </div>
+
+</div>
+
+@foreach (var date in Weather.WeatherForecast.list.Select(l => l.dtDateTime.Date).Distinct())
+{
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Weather forecast for @date.ToShortDateString()</h2>
+            <div class="row row-cols-1 row-cols-md-4 g-4">
+                @foreach (var item in Weather.WeatherForecast.list
+               .Where(l => l.dtDateTime.Date == date)
+               .OrderBy(l => l.dtDateTime))
+                {
+                    <div class="col">
+                        <WeatherCard DateTime="@item.dtDateTime.ToString("HH:mm dd/MM/yy")"
+                                     WeatherIconImgSrc="@item.weather.First().iconImgSrc"
+                                     WeatherDescription="@item.weather.First().main"
+                                     Temperature="@item.main.temp"
+                                     TemperatureFeelsLike="@item.main.feels_like"
+                                     TemperatureMax="@item.main.temp_max"
+                                     TemperatureMin="@item.main.temp_min"
+                                     Humidity="@item.main.humidity"
+                                     WindSpeed="@item.wind.speed" />
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] IWeatherScreenRepository WeatherScreenRepository { get; set; }
+    [Inject] IOpenWeatherService OpenWeatherService { get; set; }
+    [Parameter] public WeatherDto Weather { get; set; }
+    private string successSavingMessage;
+    private string successRefreshingMessage;
+
+    private async Task AddWeatherScreen()
+    {
+        try
+        {
+            var weatherScreen = new WeatherScreen
+                {
+                    WeatherDescription = Weather.CurrentWeather.weather.First().main,
+                    Temperature = Weather.CurrentWeather.main.temp,
+                    TemperatureFeelsLike = Weather.CurrentWeather.main.feels_like,
+                    TemperatureMax = Weather.CurrentWeather.main.temp_max,
+                    TemperatureMin = Weather.CurrentWeather.main.temp_min,
+                    Humidity = Weather.CurrentWeather.main.humidity,
+                    WindSpeed = Weather.CurrentWeather.wind.speed,
+                    Latitude = Weather.CurrentWeather.coord.lat,
+                    Longitude = Weather.CurrentWeather.coord.lon,
+                    Name = Weather.Location.name,
+                    Country = Weather.Location.country,
+                    ScreenTime = DateTime.UtcNow
+                };
+
+            await WeatherScreenRepository.AddAsync(weatherScreen);
+            successSavingMessage = "WeatherScreen added to the database successfully!";
+        }
+        catch (Exception ex)
+        {
+            successSavingMessage = $"Error: {ex.Message}";
+        }
+    }
+    private async Task RefreshWeatherData()
+    {
+        try
+        {
+            Weather = await OpenWeatherService.RefreshWeatherDataAsync();
+            successRefreshingMessage = "Weather data refreshed successfully!";
+        }
+        catch (Exception ex)
+        {
+            successRefreshingMessage = $"Error: {ex.Message}";
+        }
+    }
+}

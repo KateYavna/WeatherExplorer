@@ -1,0 +1,25 @@
+﻿@using WeatherServices.Dto;
+<div class="card-group">
+    @foreach (var location in Locations)
+    {
+        <div class="card">
+            <div class="card-body">
+                <p class="card-title d-inline">
+                    @location.name
+                </p>
+                <p class="d-inline">
+                    <img src="@location.countryFlagImgSrc" class="mb-1" height="15" />
+                </p>
+                <p class="card-text">@location.state - @location.country</p>
+            </div>
+            <div class="card-footer text-center">
+                <button class="btn btn-primary" @onclick="() => OnSelectLocation.InvokeAsync(location)">Select</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IEnumerable<LocationDto> Locations { get; set; }
+    [Parameter] public EventCallback<LocationDto> OnSelectLocation { get; set; }
+}

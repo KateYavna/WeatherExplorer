@@ -1,0 +1,109 @@
+﻿@using WeatherData.Entities;
+@using WeatherData.Repositories.Interfaces;
+@using WeatherServices.Dto;
+@using WeatherServices.Services.Interfaces;
+
+<div style="display:flex">
+    <div>
+        <EditForm Model="@locationSearch" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <h2>Searching by place</h2>
+            <br />
+            <p>
+                <label>
+                    Enter a place
+                    <InputText @bind-Value="locationSearch.Location" class="form-control" />
+                </label>
+            </p>
+
+            <p>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </p>
+            
+        </EditForm>
+    </div>
+
+    <div style="margin-left:50px">
+        <EditForm Model="@searchLocationByZipCode" OnValidSubmit="@HandleValidSearchByZipCodeSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <h2>Searching by zip code and country</h2>
+            <br />
+            <div style="display:flex">
+                <div>
+                    <label>
+                        Enter a zip code
+                        <InputText @bind-Value="searchLocationByZipCode.ZipCode" class="form-control" />
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        Select a country
+                        @if (countryCodes != null)
+                        {
+                            <select @bind="searchLocationByZipCode.Country" class="form-control">
+                                @foreach (var item in codes)
+                                {
+                                    <option value="@item">@item</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <p>Loading country codes...</p>
+                        }
+                    </label>
+                </div>
+            </div>
+            <br />
+
+            <p>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </p>
+        </EditForm>
+    </div>
+</div>
+@if (locations != null)
+{
+        <LocationSelect Locations="locations"
+                        OnSelectLocation="HandleOnSelectLocation" />
+}
+@if (locationByZipCode != null)
+{
+    var fakeLocations = new List<LocationDto>();
+    fakeLocations.Add(locationByZipCode);
+    <LocationSelect Locations="fakeLocations"
+                    OnSelectLocation="HandleOnSelectLocation" />
+}
+
+@code {
+    [Inject] IOpenWeatherService OpenWeatherService { get; set; }
+    [Inject] ICountryCodeRepository CountryCodeRepository { get; set; }
+    [Parameter] public EventCallback<LocationDto> OnSelectLocation { get; set; }
+
+    LocationSearchDto locationSearch = new();
+    SearchLocationByZipCode searchLocationByZipCode = new();
+    IEnumerable<LocationDto> locations;
+    LocationDto locationByZipCode;
+    IEnumerable<CountryCode> countryCodes;
+    List<string> codes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        countryCodes = await CountryCodeRepository.GetAllAsync();
+        codes = countryCodes.Select(x => x.Code).ToList();
+    }
+
+    private async Task HandleValidSubmit() =>
+        locations = await OpenWeatherService.GetLocations(locationSearch);
+
+    private async Task HandleValidSearchByZipCodeSubmit()
+    {    
+        locationByZipCode = await OpenWeatherService.GetLocationByZipCode(searchLocationByZipCode);
+    }
+
+    private async Task HandleOnSelectLocation(LocationDto location) =>
+        await OnSelectLocation.InvokeAsync(location);
+}
