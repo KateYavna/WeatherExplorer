@@ -1,6 +1,4 @@
-﻿using WeatherServices.Dto.OpenWeather.Current;
-
-namespace WeatherServices.Dto.OpenWeather.Forecast
+﻿namespace WeatherServices.Dto.OpenWeather.Forecast
 {
     public class City
     {

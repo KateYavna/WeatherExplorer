@@ -9,7 +9,7 @@ namespace WeatherServices.Services
 {
     public class OpenWeatherService : IOpenWeatherService
     {
-        private readonly HttpClient client;
+        public HttpClient client;
         private readonly string apiKey;
         private readonly IWeatherScreenRepository _weatherScreenRepository;
         public OpenWeatherService(IConfiguration configuration, IWeatherScreenRepository weatherScreenRepository)
@@ -19,10 +19,10 @@ namespace WeatherServices.Services
             _weatherScreenRepository = weatherScreenRepository;
         }
 
-        public async Task<IEnumerable<LocationDto>> GetLocations(LocationSearchDto locationSearchDTO)
+        public async Task<IEnumerable<LocationDto>> GetLocations(LocationSearchDto locationSearchDto)
         {
             IEnumerable<LocationDto> locations = null;
-            string requestUri = GetGeoRequestUri(locationSearchDTO);
+            string requestUri = GetGeoRequestUri(locationSearchDto);
             HttpResponseMessage response = await client.GetAsync(requestUri);
 
             if (response.IsSuccessStatusCode)
@@ -42,11 +42,14 @@ namespace WeatherServices.Services
         }
         public async Task<WeatherDto> GetWeather(LocationDto location)
         {
+            var currentWeather = await GetCurrentWeather(location);
+            var weatherForecast = await GetWeatherForecast(location);
+
             return new WeatherDto
             {
                 Location = location,
-                CurrentWeather = await GetCurrentWeather(location),
-                WeatherForecast = await GetWeatherForecast(location)
+                CurrentWeather = currentWeather ?? new CurrentWeatherDto(),
+                WeatherForecast = weatherForecast ?? new WeatherForecastDto()
             };
         }
         public async Task<WeatherDto> RefreshWeatherDataAsync()

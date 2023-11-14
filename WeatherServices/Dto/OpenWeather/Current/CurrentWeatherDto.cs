@@ -1,4 +1,7 @@
-﻿namespace WeatherServices.Dto.OpenWeather.Current
+﻿using System.Text.Json.Serialization;
+using WeatherData.Converters;
+
+namespace WeatherServices.Dto.OpenWeather.Current
 {
     public class CurrentWeatherDto
     {
